@@ -1,28 +1,43 @@
-import axios from "axios"
-import { NEWS_API, API_KEY } from "../env/env"
+    import axios from "axios"
 
-export default async function getLatestNews(setArticles, page = 1, setLastPage, category, submitText) {
-    try {
-        await axios.get(`${NEWS_API}/top-headlines`, {
-            params: {
-                apiKey: API_KEY,
-                country: "us",
-                pageSize: 10,
-                page: page,
-                category: submitText ? "" : category,
-                q: submitText
+    export default async function getLatestNews(page = 1, category, submitText, signal) {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_NEWS_API}/top-headlines`, {
+                params: {
+                    apiKey: process.env.REACT_APP_API_KEY,
+                    country: "us",
+                    pageSize: 10,
+                    page,
+                    ...(submitText ? { q: submitText } : { category: category })
+                },
+                signal,
+            });
+
+            if (!Array.isArray(res.data?.articles)) {
+                console.error(
+                    `Error during fetching a news data. 
+                    Response from API:${res}`
+                )
+                return {
+                    articles: [],
+                    error: "Error during fetching a news data"
+                }
             }
-        }).then((res) => {
-            console.log(res.data)
-            if (res.data.articles.length === 0) setLastPage(true)
-            console.log(page === 1)
-            if (page !== 1) {
-                setArticles(prev => [...prev, ...res.data.articles])
-            } else {
-                setArticles(res.data.articles)
+
+            return {
+                articles: res.data.articles,
+                error: res.data.articles.length === 0 && page === 1
+                    ? "No one article was found :("
+                    : ""
+            };
+        } catch (error) {
+            if (axios.isCancel(error)) {
+                return { articles: [], error: "" };
             }
-        })
-    } catch (error) {
-        console.error(error)
+            console.error(error);
+            return {
+                articles: [],
+                error: "Failed to retrieve the latest news list. Please try again later."
+            };
+        }
     }
-}

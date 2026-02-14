@@ -5,6 +5,12 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 
+if (!process.env.REACT_APP_API_KEY || !process.env.REACT_APP_NEWS_API) {
+  throw new Error(
+    "REACT_APP_API_KEY or REACT_APP_NEWS_API is not defined. Create an .env file based on .env.example and restart a server"
+  );
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
